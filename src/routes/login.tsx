@@ -166,7 +166,7 @@ const script = `
                 document.body.style.opacity = '0';
                 document.body.style.transition = 'opacity 1s ease-in-out';
                 setTimeout(() => {
-                    window.location.href = '/';
+                    window.location.href = '/home';
                 }, 1000);
             }, 2000);
         });
