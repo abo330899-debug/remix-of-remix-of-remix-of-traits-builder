@@ -81,11 +81,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Nafsam" },
-      { name: "description", content: "Nafsam — a living personal archive." },
+      { title: "Nafsam | Login" },
+      { name: "description", content: "Decrypt your Nafsam vault and unlock the archive." },
       { name: "author", content: "Nafsam" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "Nafsam | Login" },
+      { name: "twitter:title", content: "Nafsam | Login" },
+      { property: "og:description", content: "Decrypt your Nafsam vault and unlock the archive." },
+      { name: "twitter:description", content: "Decrypt your Nafsam vault and unlock the archive." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7c205bfa-f1cc-4096-9d29-a3e64aea0ee9/id-preview-ac1b9c86--1e962bd0-526a-4e7f-9fb1-6a4b4d15aff8.lovable.app-1785611582117.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7c205bfa-f1cc-4096-9d29-a3e64aea0ee9/id-preview-ac1b9c86--1e962bd0-526a-4e7f-9fb1-6a4b4d15aff8.lovable.app-1785611582117.png" },
     ],
     links: [
       {
