@@ -89,7 +89,7 @@ const html = `
 <div class="film-grain"></div>
 <!-- TopAppBar -->
 <header class="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full z-50 fixed top-0 w-full bg-gradient-to-b from-surface-dim/80 to-transparent backdrop-blur-sm">
-<div class="font-display-lg-mobile text-display-lg-mobile tracking-tighter text-primary uppercase" data-nav="/">Nafsam</div>
+<div class="font-display-lg-mobile text-display-lg-mobile tracking-tighter text-primary uppercase" data-nav="/home">Nafsam</div>
 <div class="flex items-center gap-6">
 <span class="material-symbols-outlined text-primary hover:text-primary transition-colors duration-300 cursor-pointer text-on-surface-variant font-bold" style="font-variation-settings: 'FILL' 0;">language</span>
 <span class="material-symbols-outlined text-primary hover:text-primary transition-colors duration-300 cursor-pointer text-on-surface-variant font-bold" style="font-variation-settings: 'FILL' 0;">lock</span>

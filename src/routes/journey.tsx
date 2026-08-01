@@ -62,7 +62,7 @@ const html = `
 
 <!-- Top Navigation Shell -->
 <nav class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full bg-gradient-to-b from-surface-dim/80 to-transparent backdrop-blur-sm">
-<div class="font-display-lg-mobile text-display-lg-mobile tracking-tighter text-primary uppercase" data-nav="/">Nafsam</div>
+<div class="font-display-lg-mobile text-display-lg-mobile tracking-tighter text-primary uppercase" data-nav="/home">Nafsam</div>
 <div class="hidden md:flex items-center gap-8">
 <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-mono-ui uppercase text-[11px] tracking-[0.2em]" href="#">Archive</a>
 <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-mono-ui uppercase text-[11px] tracking-[0.2em]" href="#">Legacy</a>
