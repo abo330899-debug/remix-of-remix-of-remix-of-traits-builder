@@ -13,6 +13,7 @@ const NAV_MAP: Record<string, string> = {
 
 import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { translate, useI18n } from "@/lib/i18n";
 
 type Props = {
   css: string;
@@ -21,24 +22,40 @@ type Props = {
   bodyClassName?: string;
   dir?: string;
   lang?: string;
+  hideLegacyChrome?: boolean;
 };
 
-export function LegacyPage({ css, html, script, bodyClassName, dir = "ltr", lang = "en" }: Props) {
+const HIDE_CHROME_CSS = `
+.legacy-chrome-off header[class*="fixed"],
+.legacy-chrome-off nav[class*="fixed"] { display: none !important; }
+`;
+
+const ORIGINAL_TEXT = new WeakMap<Node, string>();
+const ORIGINAL_PLACEHOLDER = new WeakMap<Node, string>();
+
+export function LegacyPage({
+  css,
+  html,
+  script,
+  bodyClassName,
+  hideLegacyChrome = true,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { lang, rtl, setLang } = useI18n();
 
   useEffect(() => {
     const body = document.body;
     const added = (bodyClassName ?? "").split(/\s+/).filter(Boolean);
     body.classList.add(...added);
     document.documentElement.classList.add("dark");
-    document.documentElement.setAttribute("dir", dir);
+    document.documentElement.setAttribute("dir", rtl ? "rtl" : "ltr");
     document.documentElement.setAttribute("lang", lang);
     return () => {
       body.classList.remove(...added);
       body.removeAttribute("style");
     };
-  }, [bodyClassName, dir, lang]);
+  }, [bodyClassName, lang, rtl]);
 
   useEffect(() => {
     if (!script) return;
@@ -58,6 +75,47 @@ export function LegacyPage({ css, html, script, bodyClassName, dir = "ltr", lang
     window.setInterval = originalSetInterval;
     return () => timers.forEach((id) => clearInterval(id));
   }, [script]);
+
+  // Live translation of the legacy markup
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const applyTo = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        let original = ORIGINAL_TEXT.get(node);
+        if (original === undefined) {
+          original = node.nodeValue ?? "";
+          ORIGINAL_TEXT.set(node, original);
+        }
+        const next = translate(original, lang);
+        if (next !== node.nodeValue) node.nodeValue = next;
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      const element = node as HTMLElement;
+      if (element instanceof HTMLInputElement && element.placeholder) {
+        let original = ORIGINAL_PLACEHOLDER.get(element);
+        if (original === undefined) {
+          original = element.placeholder;
+          ORIGINAL_PLACEHOLDER.set(element, original);
+        }
+        element.placeholder = translate(original, lang);
+      }
+      node.childNodes.forEach(applyTo);
+    };
+
+    const run = () => applyTo(el);
+    run();
+
+    const observer = new MutationObserver(() => {
+      observer.disconnect();
+      run();
+      observer.observe(el, { childList: true, subtree: true, characterData: true });
+    });
+    observer.observe(el, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [lang, html]);
 
   useEffect(() => {
     const el = ref.current;
@@ -80,10 +138,38 @@ export function LegacyPage({ css, html, script, bodyClassName, dir = "ltr", lang
     return () => el.removeEventListener("click", onClick);
   }, [navigate]);
 
+  // Legacy language switcher buttons
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const map: Record<string, "tr" | "en" | "ar" | "fa"> = {
+      turkish: "tr",
+      türkçe: "tr",
+      english: "en",
+      arabic: "ar",
+      persian: "fa",
+    };
+    const onClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement | null)?.closest("button");
+      if (!target || !el.contains(target)) return;
+      const key = (target.textContent ?? "").trim().toLowerCase();
+      const next = map[key];
+      if (!next) return;
+      e.preventDefault();
+      setLang(next);
+    };
+    el.addEventListener("click", onClick);
+    return () => el.removeEventListener("click", onClick);
+  }, [setLang]);
+
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: css }} />
-      <div ref={ref} dangerouslySetInnerHTML={{ __html: html }} />
+      <style dangerouslySetInnerHTML={{ __html: css + (hideLegacyChrome ? HIDE_CHROME_CSS : "") }} />
+      <div
+        ref={ref}
+        className={hideLegacyChrome ? "legacy-chrome-off" : undefined}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
     </>
   );
 }
