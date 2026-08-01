@@ -1,3 +1,16 @@
+const NAV_MAP: Record<string, string> = {
+  home: "/",
+  dashboard: "/",
+  nafsam: "/",
+  photos: "/photos",
+  songs: "/songs",
+  videos: "/videos",
+  writings: "/writings",
+  journey: "/journey",
+  feelings: "/journey",
+  login: "/login",
+};
+
 import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -49,6 +62,12 @@ export function LegacyPage({ css, html, script, bodyClassName, dir = "ltr", lang
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    el.querySelectorAll("button, a").forEach((node) => {
+      if (node.hasAttribute("data-nav")) return;
+      const label = (node.textContent ?? "").trim().toLowerCase();
+      const to = NAV_MAP[label];
+      if (to) node.setAttribute("data-nav", to);
+    });
     const onClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement | null)?.closest("[data-nav]");
       if (!target) return;
