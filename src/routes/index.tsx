@@ -200,8 +200,7 @@ function LoginPage() {
       html={html}
       script={script}
       bodyClassName="bg-surface-dim text-on-surface overflow-hidden font-body-md selection:bg-primary/30"
-      dir="rtl"
-      lang="ar"
+      hideLegacyChrome={false}
     />
   );
 }
