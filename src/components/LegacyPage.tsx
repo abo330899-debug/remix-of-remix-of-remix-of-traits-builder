@@ -1,14 +1,14 @@
 const NAV_MAP: Record<string, string> = {
-  home: "/",
-  dashboard: "/",
-  nafsam: "/",
+  home: "/home",
+  dashboard: "/home",
+  nafsam: "/home",
   photos: "/photos",
   songs: "/songs",
   videos: "/videos",
   writings: "/writings",
   journey: "/journey",
   feelings: "/journey",
-  login: "/login",
+  login: "/",
 };
 
 import { useEffect, useRef } from "react";
