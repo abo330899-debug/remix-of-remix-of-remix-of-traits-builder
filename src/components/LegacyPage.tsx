@@ -30,6 +30,9 @@ const HIDE_CHROME_CSS = `
 .legacy-chrome-off nav[class*="fixed"] { display: none !important; }
 `;
 
+const ORIGINAL_TEXT = new WeakMap<Node, string>();
+const ORIGINAL_PLACEHOLDER = new WeakMap<Node, string>();
+
 export function LegacyPage({
   css,
   html,
@@ -80,7 +83,11 @@ export function LegacyPage({
 
     const applyTo = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        const original = (node as Text).dataset0 ?? node.nodeValue ?? "";
+        let original = ORIGINAL_TEXT.get(node);
+        if (original === undefined) {
+          original = node.nodeValue ?? "";
+          ORIGINAL_TEXT.set(node, original);
+        }
         const next = translate(original, lang);
         if (next !== node.nodeValue) node.nodeValue = next;
         return;
@@ -88,7 +95,12 @@ export function LegacyPage({
       if (node.nodeType !== Node.ELEMENT_NODE) return;
       const element = node as HTMLElement;
       if (element instanceof HTMLInputElement && element.placeholder) {
-        element.placeholder = translate(element.placeholder, lang);
+        let original = ORIGINAL_PLACEHOLDER.get(element);
+        if (original === undefined) {
+          original = element.placeholder;
+          ORIGINAL_PLACEHOLDER.set(element, original);
+        }
+        element.placeholder = translate(original, lang);
       }
       node.childNodes.forEach(applyTo);
     };
