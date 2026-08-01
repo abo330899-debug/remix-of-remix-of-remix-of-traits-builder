@@ -79,7 +79,7 @@ const html = `
 <div class="scanlines"></div>
 <!-- Top Navigation Anchor -->
 <header class="fixed top-0 w-full bg-gradient-to-b from-surface-dim/80 to-transparent backdrop-blur-sm h-20 z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop">
-<div class="font-display-lg text-display-lg-mobile md:text-display-lg tracking-tighter text-primary uppercase" data-nav="/">Nafsam</div>
+<div class="font-display-lg text-display-lg-mobile md:text-display-lg tracking-tighter text-primary uppercase" data-nav="/home">Nafsam</div>
 <div class="flex gap-6 items-center">
 <div class="hidden md:flex gap-8">
 <button class="font-label-caps text-label-caps text-primary font-bold hover:text-primary transition-colors duration-300">DASHBOARD</button>

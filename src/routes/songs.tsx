@@ -111,7 +111,7 @@ const html = `
 <!-- TopAppBar -->
 <header class="bg-transparent fixed top-0 w-full bg-gradient-to-b from-surface-dim/80 to-transparent backdrop-blur-sm flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full z-50 transition-all">
 <div class="flex items-center gap-4">
-<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg tracking-tighter text-primary uppercase" data-nav="/">Nafsam</h1>
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg tracking-tighter text-primary uppercase" data-nav="/home">Nafsam</h1>
 <span class="text-on-surface-variant font-mono-ui text-mono-ui uppercase mt-2 hidden md:block opacity-60">/// Archive / Songs</span>
 </div>
 <div class="flex items-center gap-4 hidden md:flex">

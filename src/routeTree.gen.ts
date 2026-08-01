@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PhotosRouteImport } from './routes/photos'
@@ -20,6 +21,11 @@ import { Route as WritingsRouteImport } from './routes/writings'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JourneyRoute = JourneyRouteImport.update({
@@ -55,6 +61,7 @@ const WritingsRoute = WritingsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/home': typeof HomeRoute
   '/journey': typeof JourneyRoute
   '/login': typeof LoginRoute
   '/photos': typeof PhotosRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/home': typeof HomeRoute
   '/journey': typeof JourneyRoute
   '/login': typeof LoginRoute
   '/photos': typeof PhotosRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/home': typeof HomeRoute
   '/journey': typeof JourneyRoute
   '/login': typeof LoginRoute
   '/photos': typeof PhotosRoute
@@ -84,13 +93,28 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/journey' | '/login' | '/photos' | '/songs' | '/videos' | '/writings'
+    | '/'
+    | '/home'
+    | '/journey'
+    | '/login'
+    | '/photos'
+    | '/songs'
+    | '/videos'
+    | '/writings'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/journey' | '/login' | '/photos' | '/songs' | '/videos' | '/writings'
+    | '/'
+    | '/home'
+    | '/journey'
+    | '/login'
+    | '/photos'
+    | '/songs'
+    | '/videos'
+    | '/writings'
   id:
     | '__root__'
     | '/'
+    | '/home'
     | '/journey'
     | '/login'
     | '/photos'
@@ -101,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HomeRoute: typeof HomeRoute
   JourneyRoute: typeof JourneyRoute
   LoginRoute: typeof LoginRoute
   PhotosRoute: typeof PhotosRoute
@@ -116,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/journey': {
@@ -165,6 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HomeRoute: HomeRoute,
   JourneyRoute: JourneyRoute,
   LoginRoute: LoginRoute,
   PhotosRoute: PhotosRoute,
