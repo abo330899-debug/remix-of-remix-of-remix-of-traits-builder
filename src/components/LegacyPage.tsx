@@ -42,7 +42,7 @@ export function LegacyPage({
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { lang, rtl } = useI18n();
+  const { lang, rtl, setLang } = useI18n();
 
   useEffect(() => {
     const body = document.body;
@@ -137,6 +137,30 @@ export function LegacyPage({
     el.addEventListener("click", onClick);
     return () => el.removeEventListener("click", onClick);
   }, [navigate]);
+
+  // Legacy language switcher buttons
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const map: Record<string, "tr" | "en" | "ar" | "fa"> = {
+      turkish: "tr",
+      türkçe: "tr",
+      english: "en",
+      arabic: "ar",
+      persian: "fa",
+    };
+    const onClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement | null)?.closest("button");
+      if (!target || !el.contains(target)) return;
+      const key = (target.textContent ?? "").trim().toLowerCase();
+      const next = map[key];
+      if (!next) return;
+      e.preventDefault();
+      setLang(next);
+    };
+    el.addEventListener("click", onClick);
+    return () => el.removeEventListener("click", onClick);
+  }, [setLang]);
 
   return (
     <>
