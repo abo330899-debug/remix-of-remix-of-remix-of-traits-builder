@@ -35,11 +35,17 @@ export type MediaItem = {
   poster?: string;
 };
 
-/** الصور */
-export const photos: MediaItem[] = [];
+/** الصور — أضف مسار كل ملف داخل الـ bucket */
+export const photos: MediaItem[] = [
+  // { key: "photos/sunset.jpg", title: "غروب" },
+];
 
 /** الفيديوهات */
-export const videos: MediaItem[] = [];
+export const videos: MediaItem[] = [
+  // { key: "videos/clip.mp4", title: "مقطع", poster: "photos/clip-cover.jpg" },
+];
 
 /** الأغاني / الملفات الصوتية */
-export const songs: MediaItem[] = [];
+export const songs: MediaItem[] = [
+  // { key: "songs/track.mp3", title: "أغنية" },
+];
