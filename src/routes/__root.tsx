@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { LanguageProvider } from "../lib/i18n";
 import { SiteNav } from "../components/SiteNav";
+import { AudioPlayerProvider } from "../components/media/AudioPlayer";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -139,9 +140,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        {!isLogin && <SiteNav />}
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <AudioPlayerProvider>
+          {!isLogin && <SiteNav />}
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </AudioPlayerProvider>
       </LanguageProvider>
     </QueryClientProvider>
   );
