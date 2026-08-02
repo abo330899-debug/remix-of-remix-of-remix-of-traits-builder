@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegacyPage } from "@/components/LegacyPage";
+import { SongsSection } from "@/components/MediaSections";
 
 const css = `
         body {
@@ -294,13 +295,17 @@ export const Route = createFileRoute("/songs")({
 
 function SongsPage() {
   return (
-    <LegacyPage
-      css={css}
-      html={html}
-      script={script}
-      bodyClassName="antialiased min-h-screen relative flex flex-col items-center pb-32"
-      dir="ltr"
-      lang="en"
-    />
+    <>
+      <LegacyPage
+        css={css}
+        html={html}
+        script={script}
+        bodyClassName="antialiased min-h-screen relative flex flex-col items-center pb-32"
+        dir="ltr"
+        lang="en"
+      />
+      <SongsSection />
+    </>
   );
 }
+

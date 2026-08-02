@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegacyPage } from "@/components/LegacyPage";
+import { PhotosSection } from "@/components/MediaSections";
 
 const css = `
         body {
@@ -274,13 +275,17 @@ export const Route = createFileRoute("/photos")({
 
 function PhotosPage() {
   return (
-    <LegacyPage
-      css={css}
-      html={html}
-      script={script}
-      bodyClassName="selection:bg-primary/30"
-      dir="ltr"
-      lang="en"
-    />
+    <>
+      <LegacyPage
+        css={css}
+        html={html}
+        script={script}
+        bodyClassName="selection:bg-primary/30"
+        dir="ltr"
+        lang="en"
+      />
+      <PhotosSection />
+    </>
   );
 }
+
