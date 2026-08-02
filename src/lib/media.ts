@@ -37,15 +37,25 @@ export type MediaItem = {
 
 /** الصور — أضف مسار كل ملف داخل الـ bucket */
 export const photos: MediaItem[] = [
-  // { key: "photos/sunset.jpg", title: "غروب" },
+  { key: "https://images.unsplash.com/photo-1517816743773-6e0fd5183646?w=800&q=80", title: "لقاء منتصف الليل" },
+  { key: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80", title: "ضباب الصباح" },
+  { key: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80", title: "وادي الصمت" },
+  { key: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80", title: "أول ضوء" },
 ];
 
 /** الفيديوهات */
 export const videos: MediaItem[] = [
-  // { key: "videos/clip.mp4", title: "مقطع", poster: "photos/clip-cover.jpg" },
+  {
+    key: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    title: "عينة فيديو",
+    poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80",
+  },
 ];
 
 /** الأغاني / الملفات الصوتية */
 export const songs: MediaItem[] = [
-  // { key: "songs/track.mp3", title: "أغنية" },
+  {
+    key: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    title: "عينة صوتية",
+  },
 ];
