@@ -1,61 +1,111 @@
 /**
- * إعدادات الوسائط المستضافة على Cloudflare R2 (Public Development URL)
+ * إعداد الوسائط المركزي — Cloudflare R2 (Public Development URL)
  *
- * 1) ضع رابط الـ bucket العام هنا (مثل: https://pub-xxxx.r2.dev)
- *    أو عرّف VITE_R2_BASE_URL في متغيرات البيئة.
- * 2) أضف أسماء الملفات في القوائم بالأسفل.
- * 3) استخدم mediaUrl("folder/file.jpg") في أي مكان بالتطبيق.
+ * 1) ضع رابط الـ bucket العام داخل متغير البيئة VITE_R2_BASE_URL
+ *    مثال: VITE_R2_BASE_URL=https://pub-xxxx.r2.dev
+ * 2) أضف الملفات في القوائم بالأسفل (images / videos / songs).
+ * 3) لا تضع الرابط داخل الكود بشكل ثابت أبدًا.
  */
 
-const ENV_BASE = (import.meta.env?.["VITE_R2_BASE_URL"] as string | undefined) ?? "";
-
-/** رابط الـ bucket العام على R2 */
-export const R2_BASE_URL = ENV_BASE || "";
+/** رابط الـ bucket العام على R2 (من متغيرات البيئة فقط) */
+export const R2_BASE_URL: string =
+  ((import.meta.env?.["VITE_R2_BASE_URL"] as string | undefined) ?? "").trim();
 
 /** هل تم ضبط الربط مع R2؟ */
-export const isMediaConfigured = Boolean(R2_BASE_URL);
+export const isMediaConfigured: boolean = R2_BASE_URL.length > 0;
 
-/** يبني رابطًا كاملًا لملف داخل الـ bucket */
-export function mediaUrl(key: string): string {
-  if (/^https?:\/\//i.test(key)) return key;
+/** رسالة موحّدة تُعرض عند غياب رابط R2 */
+export const MEDIA_NOT_CONFIGURED_MESSAGE = "لم تتم إضافة رابط Cloudflare R2 بعد";
+
+/** يبني رابطًا كاملًا لملف داخل الـ bucket ويمنع تكرار // */
+export function mediaUrl(fileName: string): string {
+  if (!fileName) return "";
+  if (/^https?:\/\//i.test(fileName)) return fileName;
   const base = R2_BASE_URL.replace(/\/+$/, "");
-  const path = key
-    .replace(/^\/+/, "")
-    .split("/")
-    .map((seg) => encodeURIComponent(seg))
-    .join("/");
+  const path = fileName.replace(/^\/+/, "");
   return base ? `${base}/${path}` : `/${path}`;
 }
 
 export type MediaItem = {
-  /** مسار الملف داخل الـ bucket، مثال: "photos/sunset.jpg" */
-  key: string;
-  title?: string;
-  /** صورة مصغّرة اختيارية (مسار داخل الـ bucket أو رابط كامل) */
-  poster?: string;
+  /** معرّف فريد */
+  id: string;
+  /** الاسم المعروض */
+  title: string;
+  /** اسم الملف داخل الـ bucket، مثال: "photos/sunset.jpg" */
+  fileName: string;
+  /** الرابط الكامل للملف */
+  url: string;
+  /** صورة مصغّرة (اسم ملف داخل الـ bucket أو رابط كامل) */
+  thumbnail: string;
+  /** التصنيف */
+  category: string;
 };
 
-/** الصور — أضف مسار كل ملف داخل الـ bucket */
-export const photos: MediaItem[] = [
-  { key: "https://images.unsplash.com/photo-1517816743773-6e0fd5183646?w=800&q=80", title: "لقاء منتصف الليل" },
-  { key: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80", title: "ضباب الصباح" },
-  { key: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80", title: "وادي الصمت" },
-  { key: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80", title: "أول ضوء" },
+type MediaInput = {
+  id: string;
+  title: string;
+  fileName: string;
+  thumbnail?: string;
+  category?: string;
+};
+
+function buildItem(input: MediaInput, useSelfAsThumb: boolean): MediaItem {
+  const url = mediaUrl(input.fileName);
+  return {
+    id: input.id,
+    title: input.title,
+    fileName: input.fileName,
+    url,
+    thumbnail: input.thumbnail ? mediaUrl(input.thumbnail) : useSelfAsThumb ? url : "",
+    category: input.category ?? "عام",
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/*  الصور — أضف كل صورة جديدة هنا                                      */
+/* ------------------------------------------------------------------ */
+const IMAGE_SOURCES: MediaInput[] = [
+  // { id: "img-1", title: "غروب", fileName: "photos/sunset.jpg", category: "طبيعة" },
 ];
 
-/** الفيديوهات */
-export const videos: MediaItem[] = [
-  {
-    key: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    title: "عينة فيديو",
-    poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80",
-  },
+/* ------------------------------------------------------------------ */
+/*  الفيديوهات — أضف كل فيديو جديد هنا                                 */
+/* ------------------------------------------------------------------ */
+const VIDEO_SOURCES: MediaInput[] = [
+  // { id: "vid-1", title: "مقطع", fileName: "videos/clip.mp4", thumbnail: "photos/clip-cover.jpg", category: "ذكريات" },
 ];
 
-/** الأغاني / الملفات الصوتية */
-export const songs: MediaItem[] = [
-  {
-    key: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    title: "عينة صوتية",
-  },
+/* ------------------------------------------------------------------ */
+/*  الأغاني — أضف كل أغنية جديدة هنا                                   */
+/* ------------------------------------------------------------------ */
+const SONG_SOURCES: MediaInput[] = [
+  // { id: "song-1", title: "أغنية", fileName: "songs/track.mp3", thumbnail: "photos/cover.jpg", category: "هادئ" },
 ];
+
+export const images: MediaItem[] = IMAGE_SOURCES.map((i) => buildItem(i, true));
+export const videos: MediaItem[] = VIDEO_SOURCES.map((i) => buildItem(i, false));
+export const songs: MediaItem[] = SONG_SOURCES.map((i) => buildItem(i, false));
+
+/** أسماء التصنيفات المتاحة داخل قائمة معيّنة */
+export function categoriesOf(items: MediaItem[]): string[] {
+  return Array.from(new Set(items.map((i) => i.category))).sort();
+}
+
+/** بحث بالاسم + فلترة بالتصنيف */
+export function filterMedia(items: MediaItem[], query: string, category: string): MediaItem[] {
+  const q = query.trim().toLowerCase();
+  return items.filter((item) => {
+    const matchesCategory = category === "all" || item.category === category;
+    const matchesQuery =
+      !q || item.title.toLowerCase().includes(q) || item.fileName.toLowerCase().includes(q);
+    return matchesCategory && matchesQuery;
+  });
+}
+
+/** يحوّل الثواني إلى m:ss */
+export function formatTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
