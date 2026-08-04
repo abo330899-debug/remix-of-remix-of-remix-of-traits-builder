@@ -81,56 +81,12 @@ const IMAGE_SOURCES: MediaInput[] = [
 /* ------------------------------------------------------------------ */
 /*  الفيديوهات — أضف كل فيديو جديد هنا                                 */
 /* ------------------------------------------------------------------ */
-const VIDEO_SOURCES: MediaInput[] = [
-  {
-    id: "vid-1",
-    title: "Big Buck Bunny",
-    fileName: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    thumbnail: "https://picsum.photos/seed/nafsamvid1/800/450",
-    category: "أفلام قصيرة",
-  },
-  {
-    id: "vid-2",
-    title: "Elephants Dream",
-    fileName: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    thumbnail: "https://picsum.photos/seed/nafsamvid2/800/450",
-    category: "أفلام قصيرة",
-  },
-  {
-    id: "vid-3",
-    title: "For Bigger Blazes",
-    fileName: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    thumbnail: "https://picsum.photos/seed/nafsamvid3/800/450",
-    category: "إعلانات",
-  },
-];
+const VIDEO_SOURCES: MediaInput[] = [];
 
 /* ------------------------------------------------------------------ */
 /*  الأغاني — أضف كل أغنية جديدة هنا                                   */
 /* ------------------------------------------------------------------ */
-const SONG_SOURCES: MediaInput[] = [
-  {
-    id: "song-1",
-    title: "SoundHelix Song 1",
-    fileName: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    thumbnail: "https://picsum.photos/seed/nafsamsong1/400/400",
-    category: "هادئ",
-  },
-  {
-    id: "song-2",
-    title: "SoundHelix Song 8",
-    fileName: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-    thumbnail: "https://picsum.photos/seed/nafsamsong2/400/400",
-    category: "إلكتروني",
-  },
-  {
-    id: "song-3",
-    title: "SoundHelix Song 16",
-    fileName: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3",
-    thumbnail: "https://picsum.photos/seed/nafsamsong3/400/400",
-    category: "هادئ",
-  },
-];
+const SONG_SOURCES: MediaInput[] = [];
 
 export const images: MediaItem[] = IMAGE_SOURCES.map((i) => buildItem(i, true));
 export const videos: MediaItem[] = VIDEO_SOURCES.map((i) => buildItem(i, false));
