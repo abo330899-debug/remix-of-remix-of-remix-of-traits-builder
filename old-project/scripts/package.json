@@ -1,0 +1,16 @@
+{
+  "name": "@workspace/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gen-thumbnails": "tsx ./src/gen-thumbnails.ts",
+    "gen-auth-tokens": "tsx ./src/gen-auth-tokens.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "sharp": "^0.35.3",
+    "tsx": "catalog:"
+  }
+}

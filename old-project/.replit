@@ -1,0 +1,93 @@
+modules = ["nodejs-20", "python-3.11", "postgresql-16"]
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 8081
+externalPort = 80
+
+[[ports]]
+localPort = 8082
+externalPort = 3001
+
+[[ports]]
+localPort = 8083
+
+[[ports]]
+localPort = 8084
+
+[[ports]]
+localPort = 8085
+externalPort = 8000
+
+[[ports]]
+localPort = 8086
+externalPort = 3003
+
+[[ports]]
+localPort = 8087
+externalPort = 8099
+
+[[ports]]
+localPort = 8088
+externalPort = 9000
+
+[[ports]]
+localPort = 8976
+externalPort = 8008
+exposeLocalhost = true
+
+[[ports]]
+localPort = 19579
+externalPort = 3000
+
+[[ports]]
+localPort = 19580
+externalPort = 4200
+
+[[ports]]
+localPort = 19581
+externalPort = 5000
+
+[[ports]]
+localPort = 19582
+externalPort = 3002
+
+[[ports]]
+localPort = 19583
+externalPort = 5173
+
+[[ports]]
+localPort = 19584
+externalPort = 6000
+
+[[ports]]
+localPort = 19585
+externalPort = 8081
+
+[[ports]]
+localPort = 19586
+externalPort = 6800
+
+[agent]
+expertMode = true
+
+[userenv]
+
+[userenv.production]
+PORT = "8080"
+NODE_ENV = "production"
+
+[userenv.shared]
+NAFSAM_STATIC_MEDIA_TOKEN = "0524488da2bf9d4cb0d9fc5afa6618ca01574416cd04c3bf"
+
+[deployment]
+deploymentTarget = "gce"
+
+[workflows]
+runButton = "Project"
+
+[nix]
+channel = "stable-25_05"

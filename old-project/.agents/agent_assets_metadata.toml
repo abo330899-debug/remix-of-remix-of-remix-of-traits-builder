@@ -1,0 +1,19 @@
+uploads = []
+
+[[generated]]
+id = "uOqQzNv-ktdJx03rWiP2H"
+uri = "file://artifacts/monitor/public/icon-source.png"
+type = "image"
+title = "generated_image"
+
+[[outputs]]
+id = "XEUTRVQvQwy3YEA8hkBVL"
+uri = "file://artifacts/nafsam/public/icon-512.png"
+type = "image"
+title = "أيقونة Nafsam — حرف E"
+
+[[outputs]]
+id = "qSwX-iRh87vu3_gMVTwsv"
+uri = "file://ARCHITECTURE_ANALYSIS.md"
+type = "text"
+title = "التحليل الكامل لبنية المشروع (Architecture Analysis)"

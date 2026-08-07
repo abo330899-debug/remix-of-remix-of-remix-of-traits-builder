@@ -1,0 +1,269 @@
+import { Router, type IRouter } from "express";
+import path from "path";
+import fs from "fs";
+import { requireAuth } from "../lib/session";
+
+const router: IRouter = Router();
+
+export const PRIVATE_ROOT = (() => {
+  const candidates = [
+    path.resolve(process.cwd(), "private"),
+    path.resolve(process.cwd(), "artifacts/api-server/private"),
+  ];
+  try {
+    candidates.push(path.resolve(__dirname, "..", "private"));
+  } catch {
+    /* __dirname may be undefined in some contexts */
+  }
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[0];
+})();
+
+function sendPrivate(
+  res: import("express").Response,
+  dir: string,
+  rel: string,
+): void {
+  if (!rel) {
+    res.status(400).json({ error: "no_file" });
+    return;
+  }
+  const safeRel = path.normalize(rel.replace(/\\/g, "/"));
+  const target = path.resolve(PRIVATE_ROOT, dir, safeRel);
+  const base = path.resolve(PRIVATE_ROOT, dir);
+  const relToBase = path.relative(base, target);
+  if (relToBase.startsWith("..") || relToBase === "" || path.isAbsolute(relToBase)) {
+    res.status(400).json({ error: "bad_path" });
+    return;
+  }
+  if (!fs.existsSync(target) || !fs.statSync(target).isFile()) {
+    res.status(404).json({ error: "not_found" });
+    return;
+  }
+  res.sendFile(target, {
+    headers: { "Cache-Control": "no-store" },
+  });
+}
+
+router.get("/private/media/:file", requireAuth, (req, res) => {
+  const f = req.params.file;
+  sendPrivate(res, "media", typeof f === "string" ? f : "");
+});
+router.get(/^\/private\/posters\/(.+)$/, requireAuth, (req, res) => {
+  const rel = (req.params as unknown as string[])[0] ?? "";
+  sendPrivate(res, "posters", rel);
+});
+router.get(/^\/private\/images\/(.+)$/, requireAuth, (req, res) => {
+  const rel = (req.params as unknown as string[])[0] ?? "";
+  sendPrivate(res, "images", rel);
+});
+
+interface SongItem {
+  title: string;
+  src: string;
+}
+
+interface SpecialPhotoItem {
+  file: string;
+  featured?: boolean;
+}
+
+interface MemoryFragment {
+  label: string;
+  body: string;
+}
+
+interface FeelingsContent {
+  memoryFragments: MemoryFragment[];
+  collapseLines: string[];
+  heroSub: string;
+  storyTitle: string;
+  storyParagraphs: string[];
+  memoriesTitle: string;
+  memoriesSub: string;
+  collapseTitle: string;
+  endingLine: string;
+}
+
+interface PageAudioMap {
+  home?: string;
+  moments?: string;
+  photos?: string;
+  writings?: string;
+}
+
+interface MediaConfig {
+  heroImageUrl: string;
+  photosDir: string;
+}
+
+function getDefaultFeelings(): FeelingsContent {
+  return {
+    memoryFragments: [
+      { label: "I", body: "Bir gülüşün vardı… şimdi onu hatırladığımda içimde bir şey kapanıyor, bir kapı gibi, sessizce." },
+      { label: "II", body: "Sesini hâlâ duyabiliyorum, ama artık beni çağırmıyor. Sadece içimde bir oda boşaltıyor." },
+      { label: "III", body: "Bazı geceler nefes almak ağırlaşıyor, sanki yokluğun ciğerlerime yerleşmiş." },
+      { label: "IV", body: "Adını yazmaya çalıştım, kalem kırıldı. Hatıralar dilimde değil, parmaklarımda kanıyor." },
+      { label: "V", body: "Sevmek bittiğinde, geriye sevdiğin kişinin gölgesi değil; o gölgeye alışmış bir kalp kalıyor." },
+      { label: "VI", body: "Bir gün uyandım ve hiçbir şey acıtmadı. İşte o gün, içimde gerçekten bir şey öldüğünü anladım." },
+    ],
+    collapseLines: [
+      "Önce sesin sustu.",
+      "Sonra ismin uzaklaştı.",
+      "Sonra yüzün belirsizleşti.",
+      "Sonra hatıran ağırlaştı.",
+      "Sonra hatıran hafifledi.",
+      "Sonra… hiçbir şey kalmadı.",
+    ],
+    heroSub: "Bir kalp ölmez, sadece konuşmayı bırakır.\nBu sayfa o sessizliği taşıyor.",
+    storyTitle: "Boğulma sessiz başlar",
+    storyParagraphs: [
+      "Hisler bir gecede ölmez. Önce yorulur. Önce sustukları, söylediklerinden çoğalır. Önce baktıkları yerlere bakmaktan vazgeçerler. Sonra bir sabah uyanırsın ve içinde sadece eski bir oda kalmıştır; perdeleri çekili, ışıkları kapalı.",
+      "Seni en çok yoran şeyin onun gidişi olduğunu sanırsın. Oysa yoran şey, hâlâ dönmesini bekleyen o ufak, inatçı, çocuk kalbindir. Ona susmasını söylemek istersin ama sesin çıkmaz; çünkü ona ait olan tek şey, artık o sestir.",
+      "Bir insanı kaybetmek ölüm değildir. Kaybetmek, hâlâ o insanla yaşamayı sürdürmektir; ama onsuz. Her sabah aynı şehirde uyanırsın, aynı kapıdan çıkarsın, aynı sokaktan geçersin — sadece yanında biri eksiktir.",
+    ],
+    memoriesTitle: "Kırık hatıralar",
+    memoriesSub: "Her biri bir cam kırığı. Sessizce kanatıyor.",
+    collapseTitle: "Çöküş",
+    endingLine: "Bazı isimler ölmez,\nsadece içinde gizlice fısıldamaya başlar.",
+  };
+}
+
+function getDefaultPageAudio(): PageAudioMap {
+  return {
+    home: "home_song.mp3",
+    moments: "song1.mp3",
+    photos: "song2.mp3",
+    writings: "song3.mp3",
+  };
+}
+
+function getDefaultMediaConfig(): MediaConfig {
+  return {
+    heroImageUrl: "/api/private/images/hero.webp",
+    photosDir: "all_photos",
+  };
+}
+
+function getDefaultMomentImages(): string[] {
+  return ["photo1.webp", "photo2.webp", "photo3.webp"];
+}
+
+function getDefaultSpecialPhotos(): SpecialPhotoItem[] {
+  return [
+    { file: "photo1.webp" },
+    { file: "photo2.webp" },
+    { file: "photo3.webp" },
+    { file: "photo4.webp" },
+    { file: "photo5.webp" },
+    { file: "photo6.webp" },
+    { file: "photo7.webp", featured: true },
+  ];
+}
+
+function getDefaultSongs(): SongItem[] {
+  return [
+    { title: "Be Koja Residi — Dorcci", src: "/api/private/media/song1.mp3" },
+    { title: "Ghatle Amd — Dorcci", src: "/api/private/media/song2.mp3" },
+    { title: "Moroor - Haamim", src: "/api/private/media/song3.mp3" },
+    { title: "I Was Never There - The Weeknd", src: "/api/private/media/song4.mp3" },
+    { title: "Hey To — Amir Khoshnegar", src: "/api/private/media/song5.mp3" },
+    { title: "Kusura Bakma — Blok3", src: "/api/private/media/song6.mp3" },
+    { title: "Bi To", src: "/api/private/media/song7.mp3" },
+    { title: "Ghermez — Poobon", src: "/api/private/media/song8.mp3" },
+    { title: "Jonoon — Hayedeh & Moein", src: "/api/private/media/song9.mp3" },
+    { title: "Shahkar (Remix) — Savash", src: "/api/private/media/song10.mp3" },
+    { title: "Tabestoon Kootahe — Zedbazi", src: "/api/private/media/song11.mp3" },
+    { title: "Tabestoon Kootahe", src: "/api/private/media/song12.mp3" },
+    { title: "Hayedeh (AI)", src: "/api/private/media/song13.mp3" },
+    { title: "Ghatle Amd (Guitar, Slowed) — Dorcci", src: "/api/private/media/song14.mp3" },
+    { title: "Ghalbam Roo Tekrare", src: "/api/private/media/song15.mp3" },
+    { title: "Moteasefane — Majid Razavi", src: "/api/private/media/song16.mp3" },
+    { title: "Moohash — Javad Ara", src: "/api/private/media/song17.mp3" },
+    { title: "Duset Daram — Nivad", src: "/api/private/media/song18.mp3" },
+  ];
+}
+
+let contentCache: unknown | null = null;
+export function loadContent(): unknown {
+  if (contentCache) return contentCache;
+  const file = path.resolve(PRIVATE_ROOT, "content.json");
+  let base: Record<string, unknown> = { writings: {}, captions: {}, farewell: {} };
+  if (fs.existsSync(file)) {
+    try {
+      base = JSON.parse(fs.readFileSync(file, "utf-8")) as Record<string, unknown>;
+    } catch {
+      /* ignore, use default */
+    }
+  }
+  if (!base.songs) {
+    base.songs = getDefaultSongs();
+  }
+  if (!base.specialPhotos) {
+    base.specialPhotos = getDefaultSpecialPhotos();
+  }
+  if (!base.momentImages) {
+    base.momentImages = getDefaultMomentImages();
+  }
+  if (!base.feelings) {
+    base.feelings = getDefaultFeelings();
+  }
+  if (!base.pageAudio) {
+    base.pageAudio = getDefaultPageAudio();
+  }
+  if (!base.mediaConfig) {
+    base.mediaConfig = getDefaultMediaConfig();
+  }
+  contentCache = base;
+  return contentCache;
+}
+
+/**
+ * Normalise mediaConfig.heroImageUrl so the client always receives an
+ * authenticated /api/private/images/ URL, never a public object-storage URL.
+ *
+ * Handles three forms that may appear in content.json:
+ *   - Already an API path  ("/api/private/images/…")  → pass through unchanged
+ *   - Relative filename    ("hero.webp")               → prefix with API path
+ *   - Public http(s) URL   ("https://…r2.dev/…")       → extract filename, prefix
+ */
+function sanitizeContentForClient(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
+  const content = { ...(raw as Record<string, unknown>) };
+  const mediaConfig = content.mediaConfig;
+  if (mediaConfig && typeof mediaConfig === "object" && !Array.isArray(mediaConfig)) {
+    const mc = { ...(mediaConfig as Record<string, unknown>) };
+    const heroUrl = mc.heroImageUrl;
+    if (typeof heroUrl === "string" && heroUrl) {
+      if (heroUrl.startsWith("/api/private/")) {
+        // Already routed through the authenticated API — no change needed.
+      } else if (/^https?:\/\//i.test(heroUrl)) {
+        // Absolute public URL: extract the path after /images/ and re-route.
+        try {
+          const parsed = new URL(heroUrl);
+          const m = parsed.pathname.match(/^\/images\/(.+)$/);
+          const rel = m ? m[1] : parsed.pathname.replace(/^\/+/, "");
+          mc.heroImageUrl = `/api/private/images/${rel}`;
+        } catch {
+          // Malformed URL — omit rather than leak a public URL.
+          delete mc.heroImageUrl;
+        }
+      } else {
+        // Relative filename or path — route through the authenticated endpoint.
+        const rel = heroUrl.replace(/^\/+/, "");
+        mc.heroImageUrl = `/api/private/images/${rel}`;
+      }
+    }
+    content.mediaConfig = mc;
+  }
+  return content;
+}
+
+router.get("/private/content", requireAuth, (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json(sanitizeContentForClient(loadContent()));
+});
+
+export default router;

@@ -1,0 +1,163 @@
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
+import { type Translations, type Lang } from "@/i18n/translations";
+import TypewriterTitle from "@/components/TypewriterTitle";
+import FarewellPassage from "@/components/FarewellPassage";
+import OblivionScript from "@/components/OblivionScript";
+import Footer from "@/components/Footer";
+import PhotoBackdrop from "@/components/PhotoBackdrop";
+import usePageAudio from "@/hooks/usePageAudio";
+import { usePrivateContent, pickLangPages } from "@/hooks/usePrivateContent";
+
+import "@/styles/luxe-home-login.css";
+
+const START = new Date("2025-08-20T04:04:00");
+
+function elapsed(now: Date) {
+  let d = Math.floor((now.getTime() - START.getTime()) / 1000);
+  if (d < 0) d = 0;
+  const days = Math.floor(d / 86400);
+  const hrs = Math.floor((d % 86400) / 3600);
+  const mins = Math.floor((d % 3600) / 60);
+  const secs = d % 60;
+  return { days, hrs, mins, secs };
+}
+
+interface Props {
+  t: Translations;
+  lang: Lang;
+}
+
+export default function Home({ t, lang }: Props) {
+  const data = usePrivateContent();
+  usePageAudio(data?.pageAudio?.home ?? "");
+  const p = pickLangPages(data, lang);
+
+  const [el, setEl] = useState(elapsed(new Date()));
+
+  useEffect(() => {
+    const interval = setInterval(() => setEl(elapsed(new Date())), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const heroImage = data?.mediaConfig?.heroImageUrl ?? "";
+
+  useEffect(() => {
+    if (!heroImage) return;
+    if (document.head.querySelector(`link[data-hero-preload="1"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = heroImage;
+    link.setAttribute("fetchpriority", "high");
+    link.setAttribute("data-hero-preload", "1");
+    document.head.appendChild(link);
+    const img = new Image();
+    (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority =
+      "high";
+    img.decoding = "async";
+    img.src = heroImage;
+    return () => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+    };
+  }, [heroImage]);
+
+  return (
+    <div className="page-content home-page celestial-luxe-theme">
+      <div className="luxe-ambient-glow" aria-hidden="true" />
+      <div className="luxe-stars" aria-hidden="true">
+        <div className="star star-1"></div>
+        <div className="star star-2"></div>
+        <div className="star star-3"></div>
+        <div className="star star-4"></div>
+        <div className="star star-5"></div>
+      </div>
+      <PhotoBackdrop />
+      <section className="hero">
+        <div
+          className="hero-bg"
+          style={heroImage ? { backgroundImage: `url(${heroImage})` } : {}}
+        />
+        <div className="hero-overlay" />
+        <div className="hero-body">
+          <span className="eyebrow luxe-eyebrow">{t.hero_eyebrow}</span>
+          <TypewriterTitle text={t.hero_title} />
+
+          {p.farewell_title && (
+            <FarewellPassage
+              title={p.farewell_title}
+              paragraphs={[
+                p.farewell_p1 ?? "",
+                p.farewell_p2 ?? "",
+                p.farewell_p3 ?? "",
+                p.farewell_p4 ?? "",
+              ].filter(Boolean)}
+              silverAnchor={p.farewell_silver_anchor ?? ""}
+              memoryPattern={p.farewell_memory_pattern ?? ""}
+              dir={t.dir}
+              lang={lang}
+            />
+          )}
+          <div className="elapsed-counter">
+            <span>
+              {el.days} {t.countdown_day}
+            </span>
+            <span>
+              {el.hrs} {t.countdown_hour}
+            </span>
+            <span>
+              {el.mins} {t.countdown_minute}
+            </span>
+            <span>
+              {el.secs} {t.countdown_second}
+            </span>
+          </div>
+          <div className="hero-buttons">
+            <Link href="/journey" className="btn btn-primary">
+              {t.open_story}
+            </Link>
+            <Link href="/writings" className="btn btn-outline">
+              {t.read_pain}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {p.oblivion_name && (
+        <OblivionScript
+          name={p.oblivion_name}
+          hint={p.oblivion_hint ?? ""}
+          revealed={p.oblivion_revealed ?? ""}
+          dir={t.dir}
+          lang={lang}
+        />
+      )}
+
+      <div className="luxe-divider" aria-hidden="true">
+        <div className="luxe-diamond"></div>
+      </div>
+
+      <section className="cards-section">
+        <div className="cards-grid">
+          <Link href="/journey" className="card glass luxe-glass-card">
+            <h3>{t.card_moments_title}</h3>
+            {p.card_moments_text && <p>{p.card_moments_text}</p>}
+          </Link>
+          <Link href="/photos" className="card glass luxe-glass-card">
+            <h3>{t.card_photos_title}</h3>
+            {p.card_photos_text && <p>{p.card_photos_text}</p>}
+          </Link>
+          <Link href="/songs" className="card glass luxe-glass-card">
+            <h3>{t.card_songs_title}</h3>
+            {p.card_songs_text && <p>{p.card_songs_text}</p>}
+          </Link>
+          <Link href="/writings" className="card glass luxe-glass-card">
+            <h3>{t.card_writings_title}</h3>
+            {p.card_writings_text && <p>{p.card_writings_text}</p>}
+          </Link>
+        </div>
+      </section>
+      {p.footer_text && <Footer text={p.footer_text} />}
+    </div>
+  );
+}

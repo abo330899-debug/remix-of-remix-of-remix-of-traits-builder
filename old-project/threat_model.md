@@ -1,0 +1,76 @@
+# Threat Model
+
+## Project Overview
+
+This project is a pnpm-workspace TypeScript monorepo for a personal memory archive called Nafsam. Production consists of a React + Vite frontend in `artifacts/nafsam` and an Express 5 API in `artifacts/api-server`. The site presents a public landing/login experience and is intended to restrict the underlying memories, media, and writings to authorized viewers.
+
+Current production architecture details that matter for future scans:
+- Authentication is implemented as a custom answer-based login flow in `artifacts/api-server/src/routes/auth.ts` and a public login UI in `artifacts/nafsam/src/pages/Login.tsx`.
+- Successful login issues an HMAC-signed `httpOnly` session cookie from `artifacts/api-server/src/lib/session.ts`.
+- Session revocation is backed by PostgreSQL through `revoked_sessions`, but revocation-sensitive guarantees still depend on durable database writes succeeding during logout and verification.
+- The currently deployed app is `private`, so Replit's deployment perimeter reduces public internet reachability; scans should still treat shared-device privacy and authorized-viewer session handling as production-relevant.
+- Current Replit production is the VM/API path defined by the root `.replit` and `package.json` (`pnpm start` runs `@workspace/api-server`). Future scans should treat this as the authoritative production path unless deployment wiring changes again.
+- Static hosting is a live production surface, not legacy: the site is deployed to Cloudflare Pages (`ech-nafasm-ska.pages.dev`, direct upload + GitHub-connected) and to GitHub Pages (`abo330899-debug.github.io/ech-nafasm-ska/`, enabled 2026-07-21 via the checked-in `.github/workflows/github-pages.yml`, which builds static-mode bundles because `vite.config.ts` loads the committed `.env.cloudflare-pages` whenever `CF_PAGES=1` or `GITHUB_ACTIONS=true`). Both hosts serve the same client-side-auth static bundles; scans must treat these bundles, the committed `.env.cloudflare-pages` files (nafsam and telegram-call), and the workflow as production surfaces. The GitHub repo itself is public.
+- Public object-storage URLs embedded inside authenticated content are still production-relevant. Even when discovery is gated by `/api/private/content`, any field that points to a public `r2.dev` object bypasses the intended confidentiality boundary once revealed to a viewer.
+- As of 2026-07-21 the R2 bucket is retired (account-wide R2 disable). As of 2026-07-22 the static hosts no longer depend on the Replit deployment at all: the FULL private tree (`media`, `posters`, `images`, transcoded so every file is ≤25MiB) plus a sanitized `content.json` is uploaded DIRECTLY to the Cloudflare Pages deployment under `/pub/<NAFSAM_STATIC_MEDIA_TOKEN>/…`, and `VITE_R2_BASE` points at the same-origin `https://ech-nafasm-ska.pages.dev/pub/<token>`. The token (`NAFSAM_STATIC_MEDIA_TOKEN`) is a dedicated random value, never derived from login passwords, and is intentionally baked into the public static bundles and the committed `.env.cloudflare-pages` files — the same public-by-obscurity posture as the old public r2.dev base URL, but a superset (entire private tree). The Replit deployment can stay PRIVATE; the api-server `/api/pub/:token/*` routes (`artifacts/api-server/src/routes/pub.ts`) remain in code but are unreachable from the public internet while the deployment is private. A Cloudflare Pages Function (`artifacts/nafsam/functions/pub/[token]/media/[file].js`) serves byte-range (206) responses for media; its bundled `sizes.json` manifest — a full media-filename inventory — is committed to the public GitHub repo, which is within the same accepted public-by-obscurity posture (the token-gated `content.json` already enumerates media). Cloudflare Pages git auto-deploy is disabled; deploys are manual direct uploads.
+
+Production assumptions for future scans:
+- `NODE_ENV` is `production` in deployed environments.
+- Platform TLS is managed by the deployment platform.
+- Requests reach the Node process through a platform proxy/load balancer, so proxy-aware controls matter for production behavior.
+- `artifacts/mockup-sandbox` is development-only and should be ignored unless production reachability is demonstrated.
+- Production deployments rebuild `artifacts/nafsam/dist/public` from current source, so checked-in `dist/public` files can be useful evidence of past leaks but do not by themselves prove a current production exposure unless the source/build path still reproduces them.
+
+## Assets
+
+- **Private memory content** -- photos, videos, audio, writings, captions, quotes, and related metadata associated with the archive. Exposure would disclose intimate personal material to unauthorized viewers.
+- **Authentication material and session state** -- accepted riddle answers, session cookies, and the session-signing secret. Compromise would allow unauthorized access to the protected archive.
+- **Application and deployment secrets** -- environment variables such as `NAFSAM_SESSION_SECRET`, `DATABASE_URL`, and any future third-party API credentials.
+- **Deployment configuration** -- checked-in configuration files and artifact metadata that influence production environment variables or startup behavior. These files must not contain the actual archive answers or other secret values.
+- **Archive privacy expectations** -- the expectation that protected pages, media, and JSON metadata are only available after successful server-side authorization and are not retained in public bundles or browser caches longer than intended.
+- **Archive availability** -- the intended viewers' ability to complete the login flow and reach protected content without being trivially locked out by unauthenticated attackers.
+
+## Trust Boundaries
+
+- **Browser to frontend bundle boundary** -- every visitor can download and inspect the public web bundle. Any sensitive text, media inventory, or gatekeeping material shipped in client assets should be treated as public.
+- **Browser to API boundary** -- `/api/auth/*` and `/api/private/*` requests cross from an untrusted client into trusted backend code. All authentication and authorization decisions must be enforced server-side.
+- **Browser local state/cache boundary** -- once a browser has fetched protected content, the app and the browser cache may retain it locally. Sensitive responses must be delivered with cache directives consistent with the archive's privacy goals, and client-side memory caches must be invalidated promptly when auth is lost.
+- **Build-time config to frontend bundle boundary** -- any value injected through Vite `VITE_*` env vars becomes readable by every visitor in the shipped frontend bundle. Authentication material, private bucket URLs, and other archive secrets must never cross this boundary.
+- **Platform proxy to Node boundary** -- the deployed app sits behind a platform-managed proxy/load balancer. Controls that rely on client network identity, such as IP-based throttling, must use trusted forwarded addresses rather than the immediate peer socket.
+- **API to private filesystem boundary** -- `artifacts/api-server/private/` stores protected media and `content.json`. File-serving code on this boundary must prevent path traversal, cache leakage, and unauthenticated access.
+- **Frontend to object-storage boundary** -- when the frontend is configured to fetch `content.json`, images, or media from object storage, that bucket becomes part of the production confidentiality boundary. Public bucket URLs bypass the private deployment perimeter entirely.
+- **Session store durability boundary** -- logout and revocation behavior cross from durable client cookies into a PostgreSQL-backed revocation store. Revocation-sensitive guarantees must still account for database outages, failed revocation writes, restarts, redeploys, and any future scale-out.
+- **Viewer to owner/admin boundary** -- the archive is primarily read-only for viewers. Any route that mutates archive state, such as content ordering or editing tools, requires a distinct authorization boundary rather than the same generic viewer session used for reading memories.
+- **Production to dev-only boundary** -- `artifacts/mockup-sandbox`, `scripts/`, and codegen/spec tooling are not production surfaces unless explicitly wired into deployment.
+
+## Scan Anchors
+
+- **Production entry points**: `artifacts/api-server/src/index.ts`, `artifacts/api-server/src/app.ts`, `artifacts/api-server/src/routes/auth.ts`, `artifacts/api-server/src/routes/private.ts`, `artifacts/nafsam/src/App.tsx`
+- **Highest-risk code areas**: `artifacts/api-server/src/lib/session.ts`, `artifacts/api-server/src/routes/auth.ts`, `artifacts/api-server/src/routes/private.ts`, `artifacts/nafsam/src/hooks/usePrivateContent.ts`, `artifacts/nafsam/src/lib/auth.ts`, `artifacts/nafsam/src/pages/Login.tsx`, `artifacts/nafsam/public/sw.js`, `artifacts/nafsam/dist/public/assets/`
+- **Sensitive configuration anchors**: `.replit`, `artifacts/*/.replit-artifact/artifact.toml`, `artifacts/api-server/private/content.json`, and deployment environment-variable configuration should be treated as production-relevant when they set authentication, startup behavior, or direct object-storage URLs.
+- **Mutation/admin surfaces**: `/api/reorder` is production-mounted and must be treated as a sensitive state-changing surface, not a harmless maintenance helper.
+- **Public surfaces**: the frontend bundle and static assets under `artifacts/nafsam/dist/public`, including generated JS chunks that any visitor can download, plus `/api/healthz` and `/api/auth/*`
+- **Intended authenticated surfaces**: `/api/private/*` and frontend routes such as `/home`, `/moments`, `/photos`, `/songs`, `/videos`, and `/writings`
+- **Dev-only areas to usually ignore**: `artifacts/mockup-sandbox/`, `scripts/`, `lib/api-spec/`, and the duplicate workspace `ECHandSKA-1/` unless production wiring is demonstrated
+
+## Threat Categories
+
+### Spoofing
+
+The server must fail closed if production authentication configuration is incomplete. Accepted login answers must come from deployment secret storage rather than hardcoded fallbacks or tracked configuration files, and the application must not expose exact accepted answers or answer identifiers to unauthenticated visitors, including in public UI elements such as login dropdowns or bootstrap endpoints such as `/api/auth/session`. Session cookies must remain signed with a production-only secret and validated on every protected request. Changing the archive answer or performing an access-revocation action must also provide a way to invalidate already-issued sessions, and that invalidation must survive routine restarts and redeploys. Logout and other revocation actions must not silently report success when the durable revocation write fails. The frontend must also expose a usable way for legitimate viewers to terminate their own session so shared-device privacy does not depend on manual cookie clearing outside the app. Build-time `VITE_*` variables and client-side localStorage flags must never become the source of truth for production authentication.
+
+### Tampering
+
+The browser is untrusted and can alter route state, requests, and asset URLs. Authorization decisions for protected memories must remain on the server, and file-serving code must continue to canonicalize user-influenced paths before reading from the private filesystem.
+
+### Information Disclosure
+
+Protected memories must not be exposed through public frontend bundles, public object-storage origins, logs, error responses, or cache policy. Sensitive text, media inventories, intimate captions, protected object identifiers, and bucket URLs that directly locate them must only be delivered after successful authorization, and even then must not resolve to publicly accessible object URLs that a viewer can replay without the app's auth checks. In this codebase, shared frontend assets such as protected page modules and generated chunks under `dist/public/assets/` are especially sensitive because anything embedded there is compiled into publicly downloadable JavaScript, and authenticated JSON manifests such as `/api/private/content` are equally sensitive because they can reveal direct media locations. Every protected response, including `/api/private/content`, must use cache directives that prevent later recovery from browser caches on shared devices. Because the SPA keeps protected data in in-memory client state, protected views and module-scoped caches must also be cleared promptly when authorization is lost rather than remaining visible until an asynchronous route check finishes.
+
+### Denial of Service
+
+The archive has a small public authentication surface, so unauthenticated abuse of `/api/auth/login` can materially deny access to intended viewers. Rate limiting must be keyed on trustworthy client identity in the deployed proxy topology and must not collapse unrelated users into a shared bucket that an attacker can exhaust for everyone. Because the login endpoint is intentionally public and answer-based, cross-origin browser automation should not be allowed to turn unrelated visitors into a distributed guessing pool that materially weakens the only online throttle protecting the archive answers.
+
+### Elevation of Privilege
+
+A visitor must not be able to promote themselves from unauthenticated to authenticated by exploiting insecure defaults, publicly exposed accepted answers, client-side route guards, or predictable asset URLs. Any backend endpoint that exposes archive data must enforce authorization server-side and must not rely on the frontend to pre-filter access. Likewise, a generic viewer session must not implicitly grant owner-level mutation powers on maintenance routes such as archive reordering or editing tools.
