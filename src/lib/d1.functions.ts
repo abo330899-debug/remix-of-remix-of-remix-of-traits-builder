@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { d1Query, kindOf, r2PublicBase, type MediaKind } from "./d1.server";
+import { d1Query, kindOf, mediaUrlForKey, r2PublicBase, legacyPublicBase, type MediaKind } from "./d1.server";
 
 export type ArchiveFile = {
   id: number;
@@ -27,7 +27,7 @@ export type ArchiveData = {
 
 export const getArchive = createServerFn({ method: "GET" }).handler(
   async (): Promise<ArchiveData> => {
-    const base = r2PublicBase();
+    const base = r2PublicBase() || legacyPublicBase();
     try {
       const [fileRows, messageRows] = await Promise.all([
         d1Query("select id, filename, r2_key, extracted_text, created_at from files order by id desc"),
@@ -41,7 +41,7 @@ export const getArchive = createServerFn({ method: "GET" }).handler(
           id: Number(r["id"] ?? 0),
           filename,
           key,
-          url: base ? `${base}/${key}` : "",
+          url: mediaUrlForKey(key),
           kind: kindOf(filename || key),
           text: (r["extracted_text"] as string | null) ?? null,
           createdAt: (r["created_at"] as string | null) ?? null,
