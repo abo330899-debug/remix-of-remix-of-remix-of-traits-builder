@@ -39,6 +39,23 @@ export function r2PublicBase(): string {
   return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
 }
 
+/** رابط عام بديل: قاعدة الوسائط القديمة (Cloudflare Pages) عند عدم تهيئة R2. */
+export function legacyPublicBase(): string {
+  const raw = (process.env["VITE_R2_BASE_URL"] ?? "").trim().replace(/\/+$/, "");
+  if (!raw) return "";
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+}
+
+/** يبني رابط الملف: R2 أولًا، ثم القاعدة القديمة. */
+export function mediaUrlForKey(key: string): string {
+  const clean = key.replace(/^\/+/, "");
+  if (!clean) return "";
+  const r2 = r2PublicBase();
+  if (r2) return `${r2}/${clean}`;
+  const legacy = legacyPublicBase();
+  return legacy ? `${legacy}/${clean}` : "";
+}
+
 export type MediaKind = "image" | "video" | "audio" | "text";
 
 export function kindOf(filename: string): MediaKind {
