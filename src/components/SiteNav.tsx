@@ -9,6 +9,7 @@ const ITEMS = [
   { to: "/videos", key: "videos", icon: "movie" },
   { to: "/writings", key: "writings", icon: "auto_stories" },
   { to: "/journey", key: "journey", icon: "timeline" },
+  { to: "/archive", key: "archive", icon: "cloud" },
 ] as const;
 
 function LanguageMenu() {
